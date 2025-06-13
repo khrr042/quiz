@@ -457,7 +457,7 @@
                     <span>선택한 답: `;
 
                 if (isMultiple && Array.isArray(userAnswer)) {
-                    const sortedAnswers = [...userAnswer].sort((a, b) => a - b);
+                    const sortedAnswers = userAnswer.slice().sort((a, b) => a - b);
                     const selectedOptions = sortedAnswers.map(idx => question.options[idx]).join(', ');
                     answerSummaryHTML += selectedOptions || '없음';
                 } else {
