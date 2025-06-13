@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>안경퀴즈</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #adadad 0%, #ffb342 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #adadad, #ffb342);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #adadad, #ffb342);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .question-container {
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .question-number {
+            color: #adadad;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .question {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: grid;
+            gap: 15px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1em;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option:hover {
+            background: #e9ecef;
+            border-color: #adadad;
+            transform: translateY(-2px);
+        }
+
+        .option.selected {
+            background: #adadad;
+            color: white;
+            border-color: #adadad;
+        }
+
+        .option input[type="radio"],
+        .option input[type="checkbox"] {
+            margin: 0;
+            width: 18px;
+            height: 18px;
+            accent-color: #adadad;
+        }
+
+        .option.selected input[type="radio"],
+        .option.selected input[type="checkbox"] {
+            accent-color: white;
+        }
+
+        .question-type {
+            color: #adadad;
+            font-size: 0.9em;
+            font-weight: 500;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #adadad, #ffb342);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .result-container {
+            display: none;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #adadad, #ffb342);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px auto;
+            color: white;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .result-text {
+            font-size: 1.3em;
+            color: #333;
+            margin: 20px 0;
+        }
+
+        .selected-answer-block {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .selected-answer-block strong {
+            font-size: 1.1em;
+            color: #222;
+        }
+
+        .selected-answer-block span {
+            display: block;
+            color: #555;
+            margin-top: 5px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .quiz-container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .question {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>제 1회 취향 맞히기 대회</h1>
+        
+        <div id="quiz-section">
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            
+            <div class="question-container">
+                <div class="question-number" id="question-number">질문 1 / 4</div>
+                <div class="question-type" id="question-type"></div>
+                <div class="question" id="question-text"></div>
+                <div class="options" id="options"></div>
+            </div>
+            
+            <div class="nav-buttons">
+                <button id="prev-btn" onclick="previousQuestion()" disabled>이전</button>
+                <button id="next-btn" onclick="nextQuestion()" disabled>다음</button>
+            </div>
+        </div>
+        
+        <div id="result-section" class="result-container">
+            <div class="score-circle" id="score-display">0/4</div>
+            <div class="result-text" id="result-message"></div>
+            <div class="selected-option" id="selected-disply"></div>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "다음 중 하람이가 가장 좋아하는 안경은?",
+                options: [1, 2, 3, 4],
+                correct: 2,
+                type: "single",
+                point: 1
+            },
+            {
+                question: "다음 중 하람이가 가능한 안경은?",
+                options: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                correct: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                type: "multiple"
+            },
+            {
+                question: "하람이가 그다지 선호하지 않는 안경은?",
+                options: [1, 2, 3, 4],
+                correct: 1,
+                type: "single",
+                point: 2
+            },
+            {
+            question: "다음 중 하람이가 세 번째로 선호하는 안경은?",
+                options: [1, 2, 3, 4, 5],
+                correct: 0,
+                type: "single",
+                point: 3
+            },
+        ];
+
+        let currentQuestion = 0;
+        let userAnswers = [];
+        let score = 0;
+
+        function loadQuestion() {
+            const questionData = quizData[currentQuestion];
+            
+            document.getElementById('question-number').textContent = 
+                `질문 ${currentQuestion + 1} / ${quizData.length}`;
+            
+            
+            document.getElementById('question-text').textContent = questionData.question;
+            
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            questionData.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                
+                const inputType = questionData.type === 'multiple' ? 'checkbox' : 'radio';
+                const inputName = questionData.type === 'multiple' ? 
+                    `question_${currentQuestion}_${index}` : `question_${currentQuestion}`;
+                
+                optionElement.innerHTML = `
+                    <input type="${inputType}" name="${inputName}" value="${index}">
+                    <span>${option}</span>
+                `;
+                
+                optionElement.onclick = () => selectOption(index, questionData.type);
+                
+                // 이전 선택 복원
+                if (questionData.type === 'multiple') {
+                    if (userAnswers[currentQuestion] && userAnswers[currentQuestion].includes(index)) {
+                        optionElement.classList.add('selected');
+                        optionElement.querySelector('input').checked = true;
+                    }
+                } else {
+                    if (userAnswers[currentQuestion] === index) {
+                        optionElement.classList.add('selected');
+                        optionElement.querySelector('input').checked = true;
+                    }
+                }
+                
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            updateProgress();
+            updateButtons();
+        }
+
+        function selectOption(index, type) {
+            if (type === 'multiple') {
+                // 다중 선택 처리
+                if (!userAnswers[currentQuestion]) {
+                    userAnswers[currentQuestion] = [];
+                }
+                
+                const currentAnswers = userAnswers[currentQuestion];
+                const answerIndex = currentAnswers.indexOf(index);
+                
+                if (answerIndex > -1) {
+                    // 이미 선택된 항목이면 제거
+                    currentAnswers.splice(answerIndex, 1);
+                } else {
+                    // 새로운 항목 추가
+                    currentAnswers.push(index);
+                }
+                
+                // UI 업데이트
+                const options = document.querySelectorAll('.option');
+                options[index].classList.toggle('selected');
+                options[index].querySelector('input').checked = currentAnswers.includes(index);
+                
+            } else {
+                // 단일 선택 처리
+                userAnswers[currentQuestion] = index;
+                
+                const options = document.querySelectorAll('.option');
+                options.forEach((option, i) => {
+                    option.classList.remove('selected');
+                    option.querySelector('input').checked = false;
+                });
+                options[index].classList.add('selected');
+                options[index].querySelector('input').checked = true;
+            }
+            
+            updateButtons();
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / quizData.length) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+        }
+
+        function updateButtons() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.disabled = currentQuestion === 0;
+            
+            // 답변이 선택되었는지 확인
+            let hasAnswer = false;
+            const currentAnswer = userAnswers[currentQuestion];
+            
+            if (quizData[currentQuestion].type === 'multiple') {
+                hasAnswer = currentAnswer && currentAnswer.length > 0;
+            } else {
+                hasAnswer = currentAnswer !== undefined;
+            }
+            
+            if (currentQuestion === quizData.length - 1) {
+                nextBtn.textContent = '점수 보기';
+                nextBtn.disabled = !hasAnswer;
+            } else {
+                nextBtn.textContent = '다음';
+                nextBtn.disabled = !hasAnswer;
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestion === quizData.length - 1) {
+                showResults();
+            } else {
+                currentQuestion++;
+                loadQuestion();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                loadQuestion();
+            }
+        }
+
+        function showResults() {
+            score = 0;
+            for (let i = 0; i < quizData.length; i++) {
+                const question = quizData[i];
+                const userAnswer = userAnswers[i];
+                
+                if (question.type === 'multiple') {
+                    // 다중 선택 채점
+                    if (userAnswer) {
+                        const correctCount = userAnswer.filter(answer => question.correct.includes(answer)).length;
+                        score += correctCount;
+                    }
+                } else {
+                    // 단일 선택 채점
+                    if (userAnswer === question.correct) {
+                        score += question.point;
+                    }
+                }
+
+            }
+            
+            document.getElementById('quiz-section').style.display = 'none';
+            document.getElementById('result-section').style.display = 'block';
+
+            document.getElementById('score-display').textContent = `${score}`;
+            
+            let answerSummaryHTML = '';
+
+            for (let i = 0; i < quizData.length; i++) {
+                const question = quizData[i];
+                const userAnswer = userAnswers[i];
+                const isMultiple = question.type === 'multiple';
+
+                answerSummaryHTML += `<div class="selected-answer-block">
+                    <strong>Q${i + 1}. ${question.question}</strong>
+                    <span>선택한 답: `;
+
+                if (isMultiple && Array.isArray(userAnswer)) {
+                    const sortedAnswers = [...userAnswer].sort((a, b) => a - b);
+                    const selectedOptions = sortedAnswers.map(idx => question.options[idx]).join(', ');
+                    answerSummaryHTML += selectedOptions || '없음';
+                } else {
+                    answerSummaryHTML += question.options[userAnswer] ?? '없음';
+                }
+
+                answerSummaryHTML += `</span></div>`;
+            }
+            document.getElementById('selected-disply').innerHTML = answerSummaryHTML;
+
+        }
+
+
+        // 퀴즈 시작
+        loadQuestion();
+    </script>
+</body>
+</html>
